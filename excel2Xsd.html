@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    /* input{
+            margin: 20px;
+        } */
+
+    textarea {
+      width: 90%;
+      height: 280px;
+      resize: none;
+      display: inline-block;
+      border-radius: 5px;
+      /* overflow: auto; */
+      /* overflow-: scroll; */
+      /* white-space: nowrap; */
+    }
+
+    .content {
+      margin: 20px;
+      text-align: center;
+    }
+
+    table {
+      text-align: center;
+      width: 100%;
+    }
+
+    tr {
+      height: 40px;
+    }
+  </style>
+  <title>Document</title>
+</head>
+
+<body>
+  <div class="content">
+    <textarea id="unSorted" placeholder="貼上要排序的內容">
+不重要	註解1	VOUCHER_KEY	9
+不重要	註解2	VOUCHER_NAME	98888
+不重要	註解3	VOUCHER_WHATEVER	123
+    </textarea>
+    <table>
+      <tr>
+        <td colspan="2">
+          <button id="clearUp" class="_block" type="button">清除上方內容 ▲</button>
+        </td>
+      </tr>
+      <tr>
+        <td colspan="2">
+          <button id="btn_sorting" type="button">執行轉換</button>
+        </td>
+      </tr>
+      <tr>
+        <td colspan="2">
+          <button id="clearBottom" class="_block" type="button">清除下方內容 ▼</button>
+        </td>
+      </tr>
+    </table>
+    <textarea id="sortedResult" readonly="true"></textarea>
+  </div>
+</body>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script>
+
+
+
+  $('#btn_sorting').on('click', function () {
+    let excelText = $('#unSorted').val();
+    let lineArr = (excelText + '').split('\n').filter((v) => v.trim() !== '');
+    let result = '';
+
+    for (let line of lineArr) {
+      let textArr = line.split('\t');
+      let length = textArr.length
+
+
+      let comment = textArr[1]
+      let name = textArr[2]
+      let originFormat = textArr[3];
+      let format = 'string';
+
+      if (originFormat.substring(0, 1) === '9') {
+        if (!originFormat.includes('V') && originFormat.substring(2, 4).includes('8')) {
+          format = 'date'
+        } else {
+          format = 'integer';
+        }
+      }
+
+      // <!-- 身分證字號 -->
+      let _comment = `<!-- ${comment} -->`
+      // <xsd:element name="CUST_ID" type="xsd:string"/>
+      let xsd = `<xsd:element name="${name}" type="xsd:${format}"/>`
+
+      result += `                ${_comment}\r\n                ${xsd}\r\n`;
+    }
+
+    $('#sortedResult').val(result);
+  });
+
+  $('#clearUp').on('click', function () {
+    $('#unSorted').val('');
+  });
+
+  $('#clearBottom').on('click', function () {
+    $('#sortedResult').val('');
+  });
+
+</script>
+
+</html>

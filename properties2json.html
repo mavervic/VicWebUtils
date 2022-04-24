@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      textarea {
+        width: 90%;
+        height: 280px;
+        resize: none;
+        display: inline-block;
+        border-radius: 5px;
+      }
+
+      .content {
+        margin: 20px;
+        text-align: center;
+      }
+
+      table {
+        text-align: center;
+        width: 100%;
+      }
+
+      tr {
+        height: 40px;
+      }
+    </style>
+    <title>properties2json</title>
+  </head>
+
+  <body>
+    <div class="content">
+      <textarea id="unSorted" placeholder="貼上要排序的內容">cactx006.uploadid.issuedCity_12 = \u9AD8\u7E23</textarea>
+
+      <table>
+        <tr>
+          <td colspan="2">
+            <button id="clearUp" class="_block" type="button">
+              清除上方內容 ▲
+            </button>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="2">
+            <button id="btn_sorting" type="button">執行轉換</button>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="2">
+            <button id="clearBottom" class="_block" type="button">
+              清除下方內容 ▼
+            </button>
+          </td>
+        </tr>
+      </table>
+
+      <textarea id="sortedResult" readonly="true"></textarea>
+    </div>
+  </body>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script>
+    $("#btn_sorting").click(function () {
+      let unsorted = $("#unSorted").val();
+      let tempLenth = 0;
+      let obj = {};
+
+      if (unsorted.trim().length <= 0) {
+        return;
+      }
+
+      for (let oneLine of unsorted.split("\n").sort()) {
+        if (oneLine != "") {
+          // unicode轉文字
+          var character = oneLine.split("\\u");
+          var native = character[0];
+          for (var i = 1; i < character.length; i++) {
+            var code = character[i];
+            native += String.fromCharCode(
+              parseInt("0x" + code.substring(0, 4))
+            );
+            if (code.length > 4) {
+              native += code.substring(4, code.length);
+            }
+          }
+          oneLine = native;
+
+          // 拆解key value
+          let firstEq = oneLine.indexOf("=");
+          let BundleStr = oneLine
+            .substr(0, firstEq)
+            .replaceAll("\t", "")
+            .trim();
+          let msg = oneLine.substr(firstEq + 1).trim();
+
+          let bundleArr = BundleStr.split(".");
+          let firstKey = bundleArr[0];
+          let secondKey = bundleArr[1];
+          let thirdKey = bundleArr[2];
+          let forthKey = bundleArr.length > 3 ? bundleArr[3] : "";
+
+          if (!obj[firstKey]) {
+            obj[firstKey] = {};
+          }
+
+          if (!obj[firstKey][secondKey]) {
+            obj[firstKey][secondKey] = {};
+          }
+
+          if (bundleArr.length === 3) {
+            if (obj[firstKey][secondKey][thirdKey]) {
+              let alertMsg = `偵測到重覆的key: ${firstKey}.${secondKey}.${thirdKey}`;
+              alert(alertMsg);
+              console.error(alertMsg);
+            }
+            obj[firstKey][secondKey][thirdKey] = msg;
+          }
+
+          if (bundleArr.length === 4) {
+            if (typeof obj[firstKey][secondKey][thirdKey] === "string") {
+              let alertMsg = `轉換${firstKey}.${secondKey}.${thirdKey}.${forthKey}時發現key值${firstKey}.${secondKey}.${thirdKey}已經被宣告成string了，請務必確認`;
+              alert(alertMsg);
+              console.error(alertMsg);
+            }
+
+            if (!obj[firstKey][secondKey][thirdKey]) {
+              obj[firstKey][secondKey][thirdKey] = {};
+            }
+
+            if (obj[firstKey][secondKey][thirdKey][forthKey]) {
+              let alertMsg = `偵測到重覆的key: ${firstKey}.${secondKey}.${thirdKey}.${forthKey}`;
+              alert(alertMsg);
+              console.error(alertMsg);
+            }
+
+            obj[firstKey][secondKey][thirdKey][forthKey] = msg;
+          }
+        }
+      }
+
+      $("#sortedResult").val(JSON.stringify(obj));
+    });
+
+    $("#clearUp").click(function () {
+      $("#unSorted").val("");
+    });
+
+    $("#clearBottom").click(function () {
+      $("#sortedResult").val("");
+    });
+  </script>
+</html>
